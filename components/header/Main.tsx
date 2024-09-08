@@ -1,3 +1,5 @@
+'use client';
+import React, { useState } from 'react';
 import Container from '../custom/Container';
 import Logo from '../custom/Logo';
 import MobileButton from './MobileButton';
@@ -6,14 +8,21 @@ import IconsGroups from './IconsGroups';
 import MainMenu from './MainMenu';
 
 export default function Main() {
+  const [openSearchBar, setOpenSearchBar] = useState(false);
+  const [openCartBar, setOpenCartBar] = useState(false);
   return (
-    <section>
+    <section className='h-full'>
       <Container>
-        <Row>
+        <Row className='justify-between'>
           <MobileButton />
           <Logo />
           <MainMenu />
-          <IconsGroups />
+          <IconsGroups
+            openSearchBar={openSearchBar}
+            setOpenSearchBar={setOpenSearchBar}
+            openCartBar={openCartBar}
+            setOpenCartBar={setOpenCartBar}
+          />
         </Row>
       </Container>
     </section>

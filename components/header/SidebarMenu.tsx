@@ -1,12 +1,6 @@
 'use client';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import React from 'react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { CiMenuFries } from 'react-icons/ci';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -16,10 +10,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SidebarMenu() {
   const [show, setShow] = useState<boolean>(false);
   const [subCategories, setSubCategories] = useState<SubCategory[]>();
+  const router = useRouter();
   //client side data fetching
   const fetcher: Fetcher<Category[], string> = (args) =>
     fetch(args)
@@ -31,7 +27,13 @@ export default function SidebarMenu() {
     fetcher
   );
 
+  const pageApi = useSWR<Category[]>(
+    process.env.NEXT_PUBLIC_API_URL + '/api/pages',
+    fetcher
+  );
+
   if (error) return <div>data fetching error!</div>;
+  if (pageApi.error) return <div>data fetching page error!</div>;
 
   //   const { data, error, isLoading } = useSWR<Page[]>(
   //     process.env.NEXT_PUBLIC_API_URL + '/api/pages',
@@ -40,6 +42,7 @@ export default function SidebarMenu() {
 
   return (
     <>
+      {isLoading && <div>loading...</div>}
       <Sheet>
         <SheetTrigger>
           <CiMenuFries size={34} />
@@ -60,7 +63,12 @@ export default function SidebarMenu() {
                     data.slice(0, 20).map((item: Category) => (
                       <div key={item._id} className='group px-4 py-2'>
                         <div className='flex items-center gap-4'>
-                          <span className='capitalize hover:text-primary-500 cursor-pointer'>
+                          <span
+                            onClick={() =>
+                              router.push(`/categories/${item.slug}`)
+                            }
+                            className='capitalize hover:text-primary-500 cursor-pointer'
+                          >
                             {item.name}
                           </span>
                           {item?.submenu && item.submenu.length > 0 && (
@@ -77,18 +85,43 @@ export default function SidebarMenu() {
                     ))}
                 </div>
               </TabsContent>
-              <TabsContent value='page'>page</TabsContent>
+              <TabsContent value='page'>
+                {pageApi.data &&
+                  pageApi.data.map((item: Page) => (
+                    <div
+                      key={item._id}
+                      className='group inline-flex items-center px-4 py-2 gap-4 w-full hover:text-primary-700 cursor-pointer capitalize '
+                    >
+                      <div className='flex items-center gap-4 w-full'>
+                        <span
+                          onClick={() =>
+                            router.push(`categories/${item.link}/products`)
+                          }
+                        >
+                          {item.name}
+                        </span>
+                        {item?.subpage && item.subpage.length > 0 && (
+                          <ChevronRight
+                            className='text-icon ms-auto'
+                            size={14}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </TabsContent>
             </Tabs>
           </div>
         </SheetContent>
       </Sheet>
+
       <Sheet open={show}>
         <SheetTrigger></SheetTrigger>
         <SheetContent
           className='px-4 w-full [&>#closeBtn]:hidden md:w-[400px]'
           side='left'
         >
-          <div className='duration-300 ease-in absolute top-0 h-screen left-0 bg-white w-[260px]'>
+          <div className='duration-300 ease-in absolute top-0 h-screen left-0 bg-white w-[260px] p-8'>
             <Button
               onClick={() => setShow(!show)}
               variant='default'
